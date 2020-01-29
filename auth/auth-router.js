@@ -4,6 +4,25 @@ const jwt = require("jsonwebtoken");
 
 const Users = require("../users/users-model.js");
 
+function makeToken(user) {
+	const payload = {
+		sub: user.id,
+		username: user.username
+	};
+
+	const options = {
+		expiresIn: 30
+	};
+
+	const token = jwt.sign(
+		payload,
+		process.env.JWT_SECRETE || "thesecret",
+		options
+	);
+
+	return token;
+}
+
 // for endpoints beginning with /api/auth
 router.post("/register", (req, res) => {
 	let user = req.body;
@@ -26,13 +45,13 @@ router.post("/login", (req, res) => {
 		.first()
 		.then(user => {
 			if (user && bcrypt.compareSync(password, user.password)) {
-				// const token = makeToken(user);
+				const token = makeToken(user);
 				res.status(200).json({
-					message: `Welcome ${user.username}!`
-					// token
+					message: `Welcome ${user.username}!`,
+					token
 				});
 			} else {
-				res.status(401).json({ message: "Invalid Credentials" });
+				res.status(401).json({ message: "You shall not pass" });
 			}
 		})
 		.catch(error => {
